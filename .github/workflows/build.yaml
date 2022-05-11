@@ -1,4 +1,7 @@
-on: push
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   server-build:
@@ -20,7 +23,7 @@ jobs:
           context: ./server
           file: ./server/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.actor }}/gibz-grades/server:latest
+          tags: ghcr.io/pwuersch/gibz-grades/server:latest
 
   client-build:
     runs-on: ubuntu-latest
@@ -41,7 +44,7 @@ jobs:
           context: ./client
           file: ./client/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.actor }}/gibz-grades/client:latest
+          tags: ghcr.io/pwuersch/gibz-grades/client:latest
           build-args: |
             API_URL=https://gibz-api.wuersch.cloud
             KC_CLIENT_ID=gibz-grades-client
