@@ -1,0 +1,29 @@
+client:
+  replicas: 1
+  image: cr.wuersch.org/p/gibz-grades/client
+  tag: main
+  host: ""
+  port: 80
+
+server:
+  replicas: 1
+  image: cr.wuersch.org/p/gibz-grades/server
+  tag: main
+  host: ""
+  port: 3000
+  rateLimit: 100
+  keycloak:
+    realm: ""
+    resource: ""
+    server: ""
+    sslRequired: external
+
+database:
+  replicas: 1
+  image: postgres
+  tag: 14-alpine
+  port: 5432
+  postgres:
+    db: gibz
+    user: gibz
+    password: gibz

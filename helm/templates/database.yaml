@@ -1,0 +1,82 @@
+{{ $serverName := print .Release.Name "-server"  }}
+{{ $databaseName := print .Release.Name "-database"  }}
+{{ $clientName := print .Release.Name "-client"  }}
+{{ $pvcName := print $databaseName "-data" }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $databaseName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $databaseName }}
+spec:
+  replicas: {{ .Values.database.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $databaseName }}
+  template:
+    metadata:
+      labels:
+        app: {{ $databaseName }}
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ $pvcName }}
+      containers:
+        - name: {{ $databaseName }}
+          image: {{ print .Values.database.image ":" .Values.database.tag }}
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+              subPath: postgres
+          ports:
+            - name: sql
+              protocol: TCP
+              containerPort: {{ .Values.database.port }}
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.database.postgres.db }}
+            - name: POSTGRES_USER
+              value: {{ .Values.database.postgres.user }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.database.postgres.password }}
+          readinessProbe:
+            exec:
+              command: 
+                - pg_isready
+          livenessProbe:
+            exec:
+              command: 
+                - pg_isready
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $databaseName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $databaseName }}
+spec:
+  selector:
+    app: {{ $databaseName }}
+  type: ClusterIP
+  ports:
+    - name: sql
+      port: {{ .Values.database.port }}
+      protocol: TCP
+      targetPort: {{ .Values.database.port }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $pvcName }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 2Gi

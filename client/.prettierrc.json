@@ -1,0 +1,16 @@
+{
+  "tabWidth": 2,
+  "useTabs": false,
+  "singleQuote": true,
+  "arrowParens": "always",
+  "bracketSpacing": true,
+  "cursorOffset": -1,
+  "embeddedLanguageFormatting": "auto",
+  "insertPragma": false,
+  "printWidth": 80,
+  "quoteProps": "as-needed",
+  "requirePragma": false,
+  "trailingComma": "es5",
+  "semi": true,
+  "proseWrap": "preserve"
+}

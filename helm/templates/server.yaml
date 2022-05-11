@@ -1,0 +1,89 @@
+{{ $serverName := print .Release.Name "-server"  }}
+{{ $databaseName := print .Release.Name "-database"  }}
+{{ $clientName := print .Release.Name "-client"  }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $serverName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $serverName }}
+spec:
+  replicas: {{ .Values.database.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $serverName }}
+  template:
+    metadata:
+      labels:
+        app: {{ $serverName }}
+    spec:
+      containers:
+        - name: {{ $serverName }}
+          image: {{ print .Values.server.image ":" .Values.server.tag }}
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              protocol: TCP
+              containerPort: {{ .Values.server.port }}
+          env:
+            - name: PORT
+              value: {{ .Values.server.port | quote }}
+            - name: RATE_LIMIT
+              value: {{ .Values.server.rateLimit | quote }}
+            - name: DATABASE_URL
+              value: {{ printf "postgresql://%s:%s@%s.%s.svc:%d/%s" .Values.database.postgres.user .Values.database.postgres.password $databaseName .Release.Namespace (.Values.database.port | int) .Values.database.postgres.db }}
+            - name: KC_REALM
+              value: {{ .Values.server.keycloak.realm }}
+            - name: KC_RESOURCE
+              value: {{ .Values.server.keycloak.resource }}
+            - name: KC_SERVER
+              value: {{ .Values.server.keycloak.server }}
+            - name: KC_SSL_REQUIRED
+              value: {{ .Values.server.keycloak.sslRequired }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.server.port }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.server.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serverName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $serverName }}
+spec:
+  selector:
+    app: {{ $serverName }}
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: {{ .Values.server.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $serverName }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    app.kubernetes.io/name: {{ $serverName }}
+spec:
+  rules:
+    - host: {{ .Values.server.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $serverName }}
+                port:
+                  name: http

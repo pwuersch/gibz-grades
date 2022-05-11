@@ -1,0 +1,12 @@
+version: '3'
+services:
+  db:
+    image: public.ecr.aws/docker/library/postgres:14
+    ports:
+      - 5432:5432/tcp
+    volumes:
+      - ./db:/var/lib/postgresql/data:rw
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testing
+      POSTGRES_DB: gibz-grades

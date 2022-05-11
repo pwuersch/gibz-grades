@@ -1,0 +1,74 @@
+{{ $serverName := print .Release.Name "-server"  }}
+{{ $databaseName := print .Release.Name "-database"  }}
+{{ $clientName := print .Release.Name "-client"  }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $clientName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $clientName }}
+spec:
+  replicas: {{ .Values.client.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $clientName }}
+  template:
+    metadata:
+      labels:
+        app: {{ $clientName }}
+    spec:
+      containers:
+        - name: {{ $clientName }}
+          image: {{ print .Values.client.image ":" .Values.client.tag }}
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: {{ .Values.client.port }}
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.client.port }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.client.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $clientName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $clientName }}
+spec:
+  selector:
+    app: {{ $clientName }}
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: {{ .Values.client.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $clientName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $clientName }}
+spec:
+  rules:
+    - host: {{ .Values.client.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $clientName }}
+                port:
+                  name: http
