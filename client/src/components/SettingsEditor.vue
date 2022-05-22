@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { NForm, NFormItem, NInput, NButton, useNotification } from 'naive-ui';
 import { onMounted, ref } from 'vue';
-import { useAuth } from '@/hooks/useAuth';
 import { useSettings } from '@/hooks/useSettings';
 import { useSettingsStore } from '@/store/settings';
+import { useAuth0 } from '@auth0/auth0-vue';
 
+const { user, idTokenClaims } = useAuth0();
 const notification = useNotification();
 const { changeSettings } = useSettings();
 const settingsStore = useSettingsStore();
@@ -78,5 +79,12 @@ onMounted(() => {
     <n-form-item>
       <n-button @click.prevent="handleValidateClick">Set Url & Pin</n-button>
     </n-form-item>
+    <code>
+      {{ user }}
+    </code>
+    <hr />
+    <code>
+      {{ idTokenClaims }}
+    </code>
   </n-form>
 </template>

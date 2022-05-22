@@ -10,8 +10,8 @@
     "pretty": "prettier -w ."
   },
   "dependencies": {
+    "@auth0/auth0-vue": "^1.0.1",
     "axios": "^0.25.0",
-    "keycloak-js": "16.1.1",
     "naive-ui": "^2.24.7",
     "pinia": "^2.0.9",
     "sass": "^1.49.0",

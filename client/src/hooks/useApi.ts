@@ -1,9 +1,8 @@
 import { config } from '@/utils/config';
-import { useAuthStore } from '@/store/auth';
-import { storeToRefs } from 'pinia';
 import { Axios, Method } from 'axios';
 import { useNotification } from 'naive-ui';
 import { BaseResponse } from '@/utils/types';
+import { useAuth0 } from '@auth0/auth0-vue';
 
 const axiosInstance = new Axios({
   baseURL: config.apiUrl,
@@ -14,12 +13,11 @@ const axiosInstance = new Axios({
 });
 
 export const useApi = () => {
-  const authStore = useAuthStore();
-  const { authenticated, keycloak } = storeToRefs(authStore);
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const notification = useNotification();
 
   const callApi = async <T>(path: string, method: Method, data?: unknown) => {
-    if (!authenticated.value) {
+    if (!isAuthenticated.value) {
       notification.warning({
         title: 'Warning',
         content: 'Please log in first',
@@ -28,7 +26,7 @@ export const useApi = () => {
       throw new Error('Not authenticated');
     }
 
-    await keycloak.value.updateToken(60);
+    const accessToken = await getAccessTokenSilently();
 
     try {
       return await axiosInstance.request<T>({
@@ -38,7 +36,7 @@ export const useApi = () => {
         headers: {
           accept: 'application/json',
           'content-type': 'application/json',
-          authorization: `Bearer ${keycloak.value.token}`,
+          authorization: `Bearer ${accessToken}`,
         },
         validateStatus: (status) => status < 300,
         transformRequest: (request) =>

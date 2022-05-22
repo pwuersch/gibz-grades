@@ -20,10 +20,6 @@ import {
   SettingsOutline as SettingsIcon,
 } from '@vicons/ionicons5';
 import GlobalLoader from './components/GlobalLoader.vue';
-import { useAuthStore } from './store/auth';
-import BeforeAuthenticated from './views/BeforeAuthenticated.vue';
-
-const authStore = useAuthStore();
 
 const themeStore = useThemeStore();
 const { darkMode } = storeToRefs(themeStore);
@@ -54,13 +50,10 @@ const menuOptions: MenuMixedOption[] = [
     <n-loading-bar-provider>
       <n-notification-provider>
         <global-loader />
-        <before-authenticated v-if="!authStore.authenticated" />
-        <div v-else>
-          <n-page-header />
-          <n-menu mode="horizontal" :options="menuOptions" />
-          <br />
-          <router-view />
-        </div>
+        <n-page-header />
+        <n-menu mode="horizontal" :options="menuOptions" />
+        <br />
+        <router-view />
       </n-notification-provider>
     </n-loading-bar-provider>
   </n-config-provider>

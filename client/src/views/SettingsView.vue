@@ -1,22 +1,20 @@
 <script setup lang="ts">
-import { useAuthStore } from '@/store/auth';
-import { storeToRefs } from 'pinia';
 import { NButton } from 'naive-ui';
 import SettingsEditor from '@/components/SettingsEditor.vue';
+import { useAuth0 } from '@auth0/auth0-vue';
 
-const authStore = useAuthStore();
-const { authenticated } = storeToRefs(authStore);
+const { loginWithRedirect, isAuthenticated, logout } = useAuth0();
 
 const login = async () => {
-  await authStore.login();
+  await loginWithRedirect();
 };
 
-const logout = async () => {
-  await authStore.logout();
+const endSession = async () => {
+  await logout();
 };
 </script>
 <template>
-  <settings-editor v-if="authenticated" />
-  <n-button v-if="!authenticated" type="info" @click="login">Login</n-button>
-  <n-button v-else type="info" @click="logout">Logout</n-button>
+  <settings-editor v-if="isAuthenticated" />
+  <n-button v-if="!isAuthenticated" type="info" @click="login">Login</n-button>
+  <n-button v-else type="info" @click="endSession">Logout</n-button>
 </template>
